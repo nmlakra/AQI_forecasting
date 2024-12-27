@@ -1,3 +1,4 @@
+import os
 import requests
 import datetime
 import json
@@ -17,7 +18,7 @@ NASA_POWER_API_PARAMS = {
         "CLRSKY_SFC_PAR_TOT",
         "ALLSKY_SFC_UVA",
         "ALLSKY_SFC_UVB",
-        "ALLSKY_SFC_UV_INDEX"
+        "ALLSKY_SFC_UV_INDEX",
     ],
     "temp_thermal_ir_flux": [
         "T2M",
@@ -27,7 +28,7 @@ NASA_POWER_API_PARAMS = {
         "T2M_RANGE",
         "T2M_MAX",
         "T2M_MIN",
-        "ALLSKY_SFC_LW_DWN"
+        "ALLSKY_SFC_LW_DWN",
     ],
     "climate_humidity_precipitation": [
         "CDD0",
@@ -38,7 +39,7 @@ NASA_POWER_API_PARAMS = {
         "HDD18_3",
         "QV2M",
         "RH2M",
-        "PRECTOTCORR"
+        "PRECTOTCORR",
     ],
     "wind_pressure": [
         "PS",
@@ -51,32 +52,40 @@ NASA_POWER_API_PARAMS = {
         "WS50M_MAX",
         "WS50M_MIN",
         "WS50M_RANGE",
-        "WD50M"
-    ]
+        "WD50M",
+    ],
 }
 
+
 def main():
-    
+
+    output_dir = "data/raw/nasa_power_data/"
+    os.makedirs(output_dir, exist_ok=True)
+
     base_url = "https://power.larc.nasa.gov/api/temporal/daily/point"
     params = {
         "community": "AG",
-        "longitude": NEW_DELHI['longitude'],
-        "latitude": NEW_DELHI['latitude'],
+        "longitude": NEW_DELHI["longitude"],
+        "latitude": NEW_DELHI["latitude"],
         "start": START_DATE.strftime("%Y%m%d"),
         "end": END_DATE.strftime("%Y%m%d"),
         "format": "JSON",
-    } 
+    }
 
     for nasa_power_api_param_name in NASA_POWER_API_PARAMS:
-        nasa_power_api_params = ",".join(NASA_POWER_API_PARAMS[nasa_power_api_param_name])
+        nasa_power_api_params = ",".join(
+            NASA_POWER_API_PARAMS[nasa_power_api_param_name]
+        )
 
         url = base_url + f"?parameters={nasa_power_api_params}"
         response = requests.get(url, params)
         if response.status_code != 200:
             raise Exception(f"Status code: {response.status_code}")
-        
-        with open(f"data/raw/{nasa_power_api_param_name}.json", "w") as outfile:
+
+        output_filepath = os.path.join(output_dir, f"{nasa_power_api_param_name}.json")
+        with open(output_filepath, "w") as outfile:
             json.dump(response.json(), outfile, indent=4)
+
 
 if __name__ == "__main__":
     main()
